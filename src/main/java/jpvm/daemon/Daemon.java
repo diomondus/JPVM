@@ -168,7 +168,7 @@ public class Daemon {
                         perror("unknown request type");
                 }
             }
-        } catch (JPVMException jpe) {
+        } catch (JPVMException ex) {
             Debug.note("Daemon, internal jpvm error.");
         }
     }
@@ -179,7 +179,7 @@ public class Daemon {
             try {
                 jpvm.pvm_send(buf, tmp.tid, tag);
                 tmp = hosts.nextIter();
-            } catch (JPVMException jpe) {
+            } catch (JPVMException ex) {
                 perror("problem sending to daemon " + tmp.tid.toString());
                 hosts.deleteTask(tmp.tid);
             }
@@ -190,7 +190,7 @@ public class Daemon {
         try {
             String name = req.upkstr();
             tasks.addTask(client, name);
-        } catch (JPVMException jpe) {
+        } catch (JPVMException ex) {
             log("bad RegisterTask invocation");
         }
     }
@@ -203,7 +203,7 @@ public class Daemon {
 
         try {
             regNum = req.upkint();
-        } catch (JPVMException jpe) {
+        } catch (JPVMException ex) {
             perror("bad RegisterChild invocation");
             return;
         }
@@ -235,8 +235,8 @@ public class Daemon {
             buf.pack(order.order);
             jpvm.pvm_send(buf, order.client,
                     DaemonMessageTag.jpvmdCreatedTask);
-        } catch (JPVMException jpe) {
-            perror("RegisterChild, \"" + jpe + "\" sending to client " + order.client.toString());
+        } catch (JPVMException ex) {
+            perror("RegisterChild, \"" + ex + "\" sending to client " + order.client.toString());
         }
     }
 
@@ -247,7 +247,7 @@ public class Daemon {
         try {
             num = req.upkint();
             name = req.upkstr();
-        } catch (JPVMException jpe) {
+        } catch (JPVMException ex) {
             perror("bad SpawnTask invocation");
             return;
         }
@@ -256,7 +256,7 @@ public class Daemon {
             try {
                 jpvm.pvm_send(buf, client,
                         DaemonMessageTag.jpvmdSpawnTask);
-            } catch (JPVMException jpe) {
+            } catch (JPVMException ex) {
                 perror("SpawnTask, problem sending "
                         + "to client " +
                         client.toString());
@@ -290,7 +290,7 @@ public class Daemon {
                 try {
                     jpvm.pvm_send(creq, target.tid,
                             DaemonMessageTag.jpvmdCreateTask);
-                } catch (JPVMException jpe) {
+                } catch (JPVMException ex) {
                     perror("SpawnTask, error scheduling " +
                             "on host " + target.tid.toString());
                 }
@@ -310,7 +310,7 @@ public class Daemon {
                 child = req.upktid();
                 orderNum = req.upkint();
             }
-        } catch (JPVMException jpe) {
+        } catch (JPVMException ex) {
             perror("CreatedTask, bad report from " +
                     client.toString());
         }
@@ -338,8 +338,8 @@ public class Daemon {
             try {
                 jpvm.pvm_send(buf, order.client,
                         DaemonMessageTag.jpvmdSpawnTask);
-            } catch (JPVMException jpe) {
-                perror("CreatedTask, \"" + jpe + "\" sending to client " + order.client.toString());
+            } catch (JPVMException ex) {
+                perror("CreatedTask, \"" + ex + "\" sending to client " + order.client.toString());
             }
 
             // Throw away the order
@@ -356,7 +356,7 @@ public class Daemon {
             name = req.upkstr();
             parent = req.upktid();
             order = req.upkint();
-        } catch (JPVMException jpe) {
+        } catch (JPVMException ex) {
             perror("bad CreateTask invocation");
             return;
         }
@@ -413,8 +413,8 @@ public class Daemon {
         buf.pack(tids, n, 1);
         try {
             jpvm.pvm_send(buf, client, DaemonMessageTag.jpvmdTaskStatus);
-        } catch (JPVMException jpe) {
-            perror("TaskStatus, \"" + jpe + "\" sending to client " +
+        } catch (JPVMException ex) {
+            perror("TaskStatus, \"" + ex + "\" sending to client " +
                     client.toString());
         }
     }
@@ -432,8 +432,8 @@ public class Daemon {
         try {
             jpvm.pvm_send(req, client,
                     DaemonMessageTag.jpvmdPingReply);
-        } catch (JPVMException jpe) {
-            perror("ping, \"" + jpe + "\" sending to client " +
+        } catch (JPVMException ex) {
+            perror("ping, \"" + ex + "\" sending to client " +
                     client.toString());
         }
     }
@@ -450,7 +450,7 @@ public class Daemon {
             req.unpack(daemonTids, num, 1);
             for (i = 0; i < num; i++)
                 hosts.addTask(daemonTids[i], names[i]);
-        } catch (JPVMException jpe) {
+        } catch (JPVMException ex) {
             log("bad AddHost invocation");
         }
     }
@@ -472,9 +472,9 @@ public class Daemon {
             newValid = new boolean[newNum];
             for (i = 0; i < newNum; i++) newNames[i] = req.upkstr();
             req.unpack(newTids, newNum, 1);
-        } catch (JPVMException jpe) {
+        } catch (JPVMException ex) {
             log("bad AddHost call");
-            perror("internalAddHost, " + jpe);
+            perror("internalAddHost, " + ex);
             return null;
         }
 
@@ -486,10 +486,10 @@ public class Daemon {
             try {
                 jpvm.pvm_send(pingBuf, newTids[i], DaemonMessageTag.jpvmdPingRequest);
                 Message pingMess = jpvm.pvm_recv(newTids[i], DaemonMessageTag.jpvmdPingReply);
-            } catch (JPVMException jpe) {
+            } catch (JPVMException ex) {
                 valid = false;
                 newValidNum--;
-                perror("internalAddHost, ping, " + jpe);
+                perror("internalAddHost, ping, " + ex);
             }
             newValid[i] = valid;
             if (valid)
@@ -553,8 +553,8 @@ public class Daemon {
         buf.pack(dTids, nhosts, 1);
         try {
             jpvm.pvm_send(buf, client, DaemonMessageTag.jpvmdHostStatus);
-        } catch (JPVMException jpe) {
-            perror("HostStatus, \"" + jpe + "\" sending to client " +
+        } catch (JPVMException ex) {
+            perror("HostStatus, \"" + ex + "\" sending to client " +
                     client.toString());
         }
     }

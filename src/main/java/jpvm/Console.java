@@ -45,8 +45,8 @@ public class Console {
                     System.exit(1);
                 }
             }
-        } catch (JPVMException jpe) {
-            perror("internal jpvm error - " + jpe.toString());
+        } catch (JPVMException ex) {
+            perror("internal jpvm error - " + ex.toString());
         }
     }
 
@@ -112,7 +112,7 @@ public class Console {
             System.out.println("i/o exception");
             try {
                 Quit();
-            } catch (JPVMException jpe) {
+            } catch (JPVMException ex) {
                 System.exit(0);
             }
         }
@@ -123,7 +123,7 @@ public class Console {
         t[0] = tid;
         try {
             jpvm.pvm_addhosts(1, h, t);
-        } catch (JPVMException jpe) {
+        } catch (JPVMException ex) {
             perror("error - couldn't add host " + host);
         }
     }

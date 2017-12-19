@@ -47,7 +47,7 @@ class perf {
             else
                 slave();
             jpvm.pvm_exit();
-        } catch (JPVMException jpe) {
+        } catch (JPVMException ex) {
             System.out.println("Error - jpvm exception");
         }
     }

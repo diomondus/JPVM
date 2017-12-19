@@ -97,8 +97,8 @@ class sor {
         try {
             jpvm = new Environment();
             doSor(args);
-        } catch (JPVMException jpe) {
-            error("jpvm Exception - " + jpe.toString());
+        } catch (JPVMException ex) {
+            error("jpvm Exception - " + ex.toString());
         } catch (Exception e) {
             error("Exception - " + e.toString());
         }
@@ -110,7 +110,7 @@ class sor {
             if (jpvm != null) {
                 try {
                     jpvm.pvm_exit();
-                } catch (JPVMException jpe) {
+                } catch (JPVMException ex) {
                 }
                 System.exit(1);
             }

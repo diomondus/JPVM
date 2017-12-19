@@ -33,7 +33,7 @@ public class RecvThread extends Thread {
                 Debug.note("RecvThread (" + my_num + ") - got a " + "new message.");
                 queue.enqueue(nw);
                 Thread.yield();
-            } catch (JPVMException jpe) {
+            } catch (JPVMException ex) {
                 Debug.note("RecvThread, " + "connection closed");
                 alive = false;
             }

@@ -40,8 +40,8 @@ public class TaskExecutorThread extends Thread {
             buf.pack(-1);
             try {
                 jpvm.pvm_send(buf, client, DaemonMessageTag.jpvmdCreatedTask);
-            } catch (JPVMException jpe) {
-                perror("CreateTask, \"" + jpe + " sending " + "to client " + client.toString());
+            } catch (JPVMException ex) {
+                perror("CreateTask, \"" + ex + " sending " + "to client " + client.toString());
             }
             return false;
         }

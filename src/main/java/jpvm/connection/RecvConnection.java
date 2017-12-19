@@ -28,7 +28,7 @@ public class RecvConnection {
             tid = new TaskId();
             try {
                 tid.recv(dataInputStream);
-            } catch (JPVMException jpe) {
+            } catch (JPVMException ex) {
                 dataInputStream = null;
                 tid = null;
                 Debug.error("RecvConnection, internal" +

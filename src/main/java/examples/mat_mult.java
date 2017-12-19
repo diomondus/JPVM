@@ -96,8 +96,8 @@ class mat_mult {
                         " (mult: " + (end - mmstart) + ")");
             }
             jpvm.pvm_exit();
-        } catch (JPVMException jpe) {
-            error("jpvm Exception - " + jpe.toString(), true);
+        } catch (JPVMException ex) {
+            error("jpvm Exception - " + ex.toString(), true);
         }
     }
 
@@ -190,7 +190,7 @@ class mat_mult {
             if (jpvm != null) {
                 try {
                     jpvm.pvm_exit();
-                } catch (JPVMException jpe) {
+                } catch (JPVMException ex) {
                 }
                 System.exit(1);
             }

@@ -42,7 +42,7 @@ class hello {
 
             // Exit from the parallel virtual machine
             jpvm.pvm_exit();
-        } catch (JPVMException jpe) {
+        } catch (JPVMException ex) {
             System.out.println("Error - jpvm exception");
         }
     }
