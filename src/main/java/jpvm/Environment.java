@@ -67,14 +67,14 @@ public class Environment {
             Message m = pvm_recv(DaemonMessageTag.jpvmdSpawnTask);
             ret = m.buffer.upkint();
             m.buffer.unpack(tids, ret, 1);
-        } catch (JPVMException jpe) {
+        } catch (JPVMException ex) {
             Debug.error("pvm_spawn, internal error");
         }
         return ret;
     }
 
-    public synchronized void pvm_send(Buffer buf, TaskId tid,
-                                      int tag) throws JPVMException {
+    public synchronized void pvm_send(Buffer buf, TaskId tid, int tag)
+            throws JPVMException {
         Debug.note("pvm_send, sending message to " + tid.toString());
         Message message = new Message(buf, tid, myTid, tag);
         if (myTid.equals(tid)) {
@@ -86,36 +86,28 @@ public class Environment {
         }
     }
 
-    public synchronized void pvm_mcast(Buffer buf, TaskId tids[],
-                                       int ntids, int tag) throws JPVMException {
+    public synchronized void pvm_mcast(Buffer buf, TaskId tids[], int ntids, int tag)
+            throws JPVMException {
         int exceptions = 0;
         Message message = new Message(buf, null, myTid, tag);
         for (int i = 0; i < ntids; i++) {
             TaskId tid = tids[i];
             message.destTid = tid;
-            Debug.note("pvm_mcast, sending message to " +
-                    tid.toString());
+            Debug.note("pvm_mcast, sending message to " + tid.toString());
             try {
                 SendConnection conn = getConnection(tid);
                 message.send(conn);
-            } catch (JPVMException jpe) {
+            } catch (JPVMException ex) {
                 exceptions++;
             }
         }
-        if (exceptions > 0)
+        if (exceptions > 0) {
             throw new JPVMException("pvm_mcast, some messages " + "failed");
+        }
     }
 
     public Message pvm_recv(TaskId tid, int tag)
             throws JPVMException {
-        //
-        // Thanks to Professor Thomas R. James of the Dept. of
-        // Mathematical Sciences at Otterbein College for finding
-        // and fixing race condition in the previous implementation
-        // of pvm_recv.
-        //
-        // Adam Ferrari - Mon Feb  1 13:11:12 EST 1999
-        //
         return myMessageQueue.dequeue(tid, tag);
     }
 
@@ -168,55 +160,54 @@ public class Environment {
         Buffer buf = new Buffer();
         try {
             Thread.sleep(1000);
-        } catch (InterruptedException ie) {
+        } catch (InterruptedException ignored) {
         }
         pvm_send(buf, daemonTid, DaemonMessageTag.jpvmdDeleteTask);
     }
 
     public Configuration pvm_config() {
-        Buffer buf = new Buffer();
-        Configuration ret = null;
+        Buffer buffer = new Buffer();
+        Configuration configuration = null;
         try {
-            pvm_send(buf, daemonTid, DaemonMessageTag.jpvmdHostStatus);
+            pvm_send(buffer, daemonTid, DaemonMessageTag.jpvmdHostStatus);
             Message m = pvm_recv(DaemonMessageTag.jpvmdHostStatus);
             int n = m.buffer.upkint();
-            ret = new Configuration(n);
+            configuration = new Configuration(n);
             for (int i = 0; i < n; i++)
-                ret.hostNames[i] = m.buffer.upkstr();
-            m.buffer.unpack(ret.hostDaemonTids, n, 1);
-        } catch (JPVMException jpe) {
+                configuration.hostNames[i] = m.buffer.upkstr();
+            m.buffer.unpack(configuration.hostDaemonTids, n, 1);
+        } catch (JPVMException ex) {
             Debug.error("pvm_config, internal error");
         }
-        return ret;
+        return configuration;
     }
 
-    public TaskStatus pvm_tasks(Configuration conf, int which) {
-        TaskStatus ret = null;
-        if (conf == null || which < 0 || which >= conf.numHosts)
+    public TaskStatus pvm_tasks(Configuration configuration, int which) {
+        TaskStatus taskStatus = null;
+        if (configuration == null || which < 0 || which >= configuration.numHosts)
             return null;
-
         try {
             Buffer buf = new Buffer();
-            pvm_send(buf, conf.hostDaemonTids[which],
-                    DaemonMessageTag.jpvmdTaskStatus);
+            pvm_send(buf, configuration.hostDaemonTids[which], DaemonMessageTag.jpvmdTaskStatus);
             Message m = pvm_recv(DaemonMessageTag.jpvmdTaskStatus);
-            ret = new TaskStatus();
-            ret.hostName = conf.hostNames[which];
-            ret.numTasks = m.buffer.upkint();
-            if (ret.numTasks == 0) {
-                ret.taskNames = null;
-                ret.taskTids = null;
-                return ret;
+            taskStatus = new TaskStatus();
+            taskStatus.hostName = configuration.hostNames[which];
+            taskStatus.numTasks = m.buffer.upkint();
+            if (taskStatus.numTasks == 0) {
+                taskStatus.taskNames = null;
+                taskStatus.taskTids = null;
+                return taskStatus;
             }
-            ret.taskNames = new String[ret.numTasks];
-            ret.taskTids = new TaskId[ret.numTasks];
-            for (int i = 0; i < ret.numTasks; i++)
-                ret.taskNames[i] = m.buffer.upkstr();
-            m.buffer.unpack(ret.taskTids, ret.numTasks, 1);
-        } catch (JPVMException jpe) {
+            taskStatus.taskNames = new String[taskStatus.numTasks];
+            taskStatus.taskTids = new TaskId[taskStatus.numTasks];
+            for (int i = 0; i < taskStatus.numTasks; i++) {
+                taskStatus.taskNames[i] = m.buffer.upkstr();
+            }
+            m.buffer.unpack(taskStatus.taskTids, taskStatus.numTasks, 1);
+        } catch (JPVMException ex) {
             Debug.error("pvm_tasks, internal error");
         }
-        return ret;
+        return taskStatus;
     }
 
     public void pvm_halt() throws JPVMException {
@@ -224,14 +215,14 @@ public class Environment {
         pvm_send(buf, daemonTid, DaemonMessageTag.jpvmdHalt);
     }
 
-    public void pvm_addhosts(int nhosts, String hostnames[],
-                             TaskId daemonTids[]) throws JPVMException {
-        Buffer buf = new Buffer();
-        buf.pack(nhosts);
-        for (int i = 0; i < nhosts; i++)
-            buf.pack(hostnames[i]);
-        buf.pack(daemonTids, nhosts, 1);
-        pvm_send(buf, daemonTid, DaemonMessageTag.jpvmdAddHost);
+    public void pvm_addhosts(int nhosts, String hostnames[], TaskId daemonTids[]) throws JPVMException {
+        Buffer buffer = new Buffer();
+        buffer.pack(nhosts);
+        for (int i = 0; i < nhosts; i++) {
+            buffer.pack(hostnames[i]);
+        }
+        buffer.pack(daemonTids, nhosts, 1);
+        pvm_send(buffer, daemonTid, DaemonMessageTag.jpvmdAddHost);
     }
 
     // Internal methods:
@@ -239,8 +230,7 @@ public class Environment {
             throws JPVMException {
         myMessageQueue = new MessageQueue();
         myConnectionSet = new ConnectionSet();
-        connectionServer = new ConnectionServer(myConnectionSet,
-                myMessageQueue);
+        connectionServer = new ConnectionServer(myConnectionSet, myMessageQueue);
         myTid = new TaskId(connectionServer.getConnectionPort());
         connectionServer.setDaemon(true);
         connectionServer.start();
@@ -251,50 +241,44 @@ public class Environment {
         }
     }
 
-    private TaskId initTaskId() {
-        TaskId ret = null;
-        return ret;
-    }
-
     private SendConnection getConnection(TaskId tid)
             throws JPVMException {
-        SendConnection ret = null;
-        ret = myConnectionSet.lookupSendConnection(tid);
-        if (ret != null) {
+        SendConnection connection;
+        connection = myConnectionSet.lookupSendConnection(tid);
+        if (connection != null) {
             // Had a cached connection...
-            return ret;
+            return connection;
         }
         // Must establish a new connection.
-        ret = SendConnection.connect(tid, myTid);
-        if (ret != null) {
-            myConnectionSet.insertSendConnection(ret);
-            return ret;
+        connection = SendConnection.connect(tid, myTid);
+        if (connection != null) {
+            myConnectionSet.insertSendConnection(connection);
+            return connection;
         }
         throw new JPVMException("getConnection, connect failed");
     }
 
     private void findDaemon() {
-        int daemonPort = -1;
+        int daemonPort;
         String daemonPortStr = System.getProperty("jpvm.daemon");
         if (daemonPortStr != null) {
             try {
-                daemonPort = Integer.valueOf(daemonPortStr).intValue();
+                daemonPort = Integer.valueOf(daemonPortStr);
             } catch (NumberFormatException nfe) {
-                Debug.error("couldn't bind to daemon, " +
-                        "jpvm.daemon not an integer");
+                Debug.error("couldn't bind to daemon, " + "jpvm.daemon not an integer");
                 daemonPort = -1;
             }
         } else {
             daemonPort = readDaemonFile();
         }
         if (daemonPort == -1) {
-            Debug.error("couldn't bind to daemon, " +
-                    "jpvm.daemon not defined");
+            Debug.error("couldn't bind to daemon, " + "jpvm.daemon not defined");
         }
         daemonTid = new TaskId(daemonPort);
     }
 
-    private void findParent() throws JPVMException {
+    private void findParent()
+            throws JPVMException {
         String parentHost = System.getProperty("jpvm.parhost");
         int parentPort = 0;
         if (parentHost == null) {
@@ -303,10 +287,9 @@ public class Environment {
         }
         String parentPortStr = System.getProperty("jpvm.parport");
         try {
-            parentPort = Integer.valueOf(parentPortStr).intValue();
+            parentPort = Integer.valueOf(parentPortStr);
         } catch (NumberFormatException nfe) {
-            Debug.error("couldn't bind to parent, " +
-                    "jpvm.parport not an integer");
+            Debug.error("couldn't bind to parent, " + "jpvm.parport not an integer");
         }
         parentTid = new TaskId(parentHost, parentPort);
 
@@ -316,24 +299,26 @@ public class Environment {
             Debug.error("no task registration number");
         } else {
             try {
-                registrationNumber =
-                        Integer.valueOf(regStr).intValue();
+                registrationNumber = Integer.valueOf(regStr);
             } catch (NumberFormatException nfe) {
                 Debug.error("invalid task registration number");
             }
         }
-        Buffer buf = new Buffer();
-        buf.pack(registrationNumber);
-        pvm_send(buf, daemonTid, DaemonMessageTag.jpvmdRegisterChild);
+        Buffer buffer = new Buffer();
+        buffer.pack(registrationNumber);
+        pvm_send(buffer, daemonTid, DaemonMessageTag.jpvmdRegisterChild);
     }
 
-    private void registerDaemon(String taskName) throws JPVMException {
+    private void registerDaemon(String taskName)
+            throws JPVMException {
         // Find out the name of this task
         if (taskName == null) {
             myName = System.getProperty("jpvm.taskname");
-            if (myName == null) myName = "(command line jpvm task)";
+            if (myName == null) {
+                myName = "(command line jpvm task)";
+            }
         } else {
-            myName = new String(taskName);
+            myName = taskName;
         }
 
         // Register this task with the daemon
@@ -343,7 +328,7 @@ public class Environment {
     }
 
     private int readDaemonFile() {
-        int port = -1;
+        int port;
         String fileName = pvm_daemon_file_name();
         try {
             File f = new File(fileName);
@@ -362,7 +347,7 @@ public class Environment {
         String userName = System.getProperty("user.name");
         String fileName = null;
         if (osName.toLowerCase().contains("windows")) {
-            fileName = "c:\\Users\\" + userName +"\\jpvmd-" + userName + ".txt";
+            fileName = "c:\\Users\\" + userName + "\\jpvmd-" + userName + ".txt";
         } else {
             fileName = "/tmp/jpvmd." + userName;
         }
