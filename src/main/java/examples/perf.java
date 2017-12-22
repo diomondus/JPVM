@@ -12,7 +12,7 @@ import java.util.Date;
  * A simple test of jpvm message passing.
  *
  */
-class perf {
+public class perf {
     private static int dataSize = 1024 * 1024;
     private static int dataSizeOf = 4;
     private static int data[] = null;
@@ -68,7 +68,7 @@ class perf {
             // Spawn test
             for (i = 1; i <= 16; i *= 2) {
                 bef = msecond();
-                ns = jpvm.pvm_spawn("perf", i, tids);
+                ns = jpvm.pvm_spawn("examples.perf", i, tids);
                 aft = msecond();
                 if (ns != i) {
                     System.err.println("Spawn error, created " +
@@ -86,7 +86,7 @@ class perf {
         }
 
         if (test_comm) {
-            ns = jpvm.pvm_spawn("perf", 1, tids);
+            ns = jpvm.pvm_spawn("examples.perf", 1, tids);
             if (ns != 1) {
                 System.err.println("Spawn error, created " +
                         ns + " tasks, " + 1 + " requested!");

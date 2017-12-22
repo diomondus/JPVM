@@ -13,7 +13,7 @@ import java.util.Date;
  * A simple parallel matrix-matrix multiply example using jpvm.
  *
  */
-class mat_mult {
+public class mat_mult {
     static final int ParamTag = 11;
     static final int DoneTag = 22;
     static final int PipeTag = 33;
@@ -43,7 +43,7 @@ class mat_mult {
             jpvm = new Environment();
             myTaskId = jpvm.pvm_mytid();
             masterTaskId = jpvm.pvm_parent();
-            if (masterTaskId == jpvm.PvmNoParent) {
+            if (masterTaskId == Environment.PvmNoParent) {
                 if (args.length != 2) usage();
                 cmd = true;
                 try {
@@ -52,15 +52,15 @@ class mat_mult {
                 } catch (NumberFormatException e) {
                     usage();
                 }
-                System.out.println("" + matDim + "x" + matDim +
-                        " matrix multiply, " + numTasks + " tasks");
+                System.out.println("" + matDim + "x" + matDim + " matrix multiply, " + numTasks + " tasks");
 
                 start = msecond();
                 taskMeshDim = getTaskMeshDim(numTasks);
 
                 tids = new TaskId[numTasks];
-                if (numTasks > 1)
-                    jpvm.pvm_spawn("mat_mult", numTasks - 1, tids);
+                if (numTasks > 1) {
+                    jpvm.pvm_spawn("examples.mat_mult", numTasks - 1, tids);
+                }
                 tids[numTasks - 1] = tids[0];
                 tids[0] = myTaskId;
                 localTaskIndex = 0;
@@ -117,10 +117,8 @@ class mat_mult {
             System.out.println("localTaskIndex\t= " + localTaskIndex);
             System.out.println("matDim\t= " + matDim);
             System.out.println("taskMeshDim\t= " + taskMeshDim);
-            System.out.println("localPartitionDim\t= " +
-                    localPartitionDim);
-            System.out.println("localPartitionSize\t= " +
-                    localPartitionSize);
+            System.out.println("localPartitionDim\t= " + localPartitionDim);
+            System.out.println("localPartitionSize\t= " + localPartitionSize);
             System.out.println("taskMeshRow\t= " + taskMeshRow);
             System.out.println("taskMeshCol\t= " + taskMeshCol);
         }
@@ -134,7 +132,9 @@ class mat_mult {
         for (i = 0; i < taskMeshDim; i++) {
             Pipe(i);
             Multiply();
-            if (i < (taskMeshDim - 1)) Roll();
+            if (i < (taskMeshDim - 1)) {
+                Roll();
+            }
         }
     }
 
@@ -143,11 +143,11 @@ class mat_mult {
         if (taskMeshCol == (taskMeshRow + iter) % taskMeshDim) {
             Buffer buf = new Buffer();
             buf.pack(A, localPartitionSize, 1);
-            for (i = 0; i < taskMeshDim; i++)
+            for (i = 0; i < taskMeshDim; i++) {
                 if (localTaskIndex != taskMeshRow * taskMeshDim + i) {
-                    jpvm.pvm_send(buf,
-                            tids[taskMeshRow * taskMeshDim + i], PipeTag);
+                    jpvm.pvm_send(buf, tids[taskMeshRow * taskMeshDim + i], PipeTag);
                 }
+            }
         } else {
             Message m = jpvm.pvm_recv(PipeTag);
             m.buffer.unpack(tempA, localPartitionSize, 1);
@@ -160,17 +160,16 @@ class mat_mult {
         for (i = 0; i < localPartitionDim; i++)
             for (j = 0; j < localPartitionDim; j++) {
                 temp = 0;
-                for (k = 0; k < localPartitionDim; k++)
-                    temp += A[i * localPartitionDim + k] *
-                            B[k * localPartitionDim + j];
+                for (k = 0; k < localPartitionDim; k++) {
+                    temp += A[i * localPartitionDim + k] * B[k * localPartitionDim + j];
+                }
                 C[i * localPartitionDim + j] += temp;
             }
     }
 
     public static void Roll() throws JPVMException {
-        int who = ((taskMeshRow != 0) ?
-                (taskMeshRow - 1) * taskMeshDim + taskMeshCol :
-                (taskMeshDim - 1) * taskMeshDim + taskMeshCol);
+        int who = taskMeshRow != 0 ? (taskMeshRow - 1) * taskMeshDim + taskMeshCol
+                                   : (taskMeshDim - 1) * taskMeshDim + taskMeshCol;
         Buffer buf = new Buffer();
         buf.pack(B, localPartitionSize, 1);
         jpvm.pvm_send(buf, tids[who], RollTag);
@@ -179,9 +178,7 @@ class mat_mult {
     }
 
     public static double msecond() {
-        Date d = new Date();
-        double msec = (double) d.getTime();
-        return msec;
+        return (double) new Date().getTime();
     }
 
     public static void error(String message, boolean die) {
@@ -190,7 +187,7 @@ class mat_mult {
             if (jpvm != null) {
                 try {
                     jpvm.pvm_exit();
-                } catch (JPVMException ex) {
+                } catch (JPVMException ignored) {
                 }
                 System.exit(1);
             }
@@ -202,11 +199,10 @@ class mat_mult {
     }
 
     public static int getTaskMeshDim(int n) {
-        int dim;
-        for (dim = 1; dim <= n && n > 0; dim++) {
+        for (int dim = 1; dim <= n; dim++) {
             if (dim * dim == n) return dim;
         }
         error("Number of tasks must be an even square", true);
         return -1;
     }
-};
+}
