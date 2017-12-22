@@ -6,7 +6,7 @@ import jpvm.messages.Message;
 import jpvm.tasks.TaskId;
 
 class hello {
-    static int num_workers = 1;
+    static int num_workers = 4;
 
     public static void main(String args[]) {
         try {
