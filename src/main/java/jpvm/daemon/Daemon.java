@@ -37,11 +37,11 @@ public class Daemon {
 
     // Which version of the JVM should be used to host tasks?
 //    private static String java_exec = "/Library/Java/JavaVirtualMachines/jdk1.8.0_121.jdk/Contents/Home/bin/java";
-    private static String java_exec = "java";
+    private static String java_exec;
+    private static String classpath;
 
     public static void main(String args[]) {
         try {
-            int i;
             // Initialize data structures
             jpvm = new Environment(true);
             myTid = jpvm.pvm_mytid();
@@ -49,7 +49,8 @@ public class Daemon {
             hosts = new TaskList();
             spawnOrders = new SpawnWorkOrderList();
             createOrders = new CreateWorkOrder[maxCreateOrders];
-
+            classpath = System.getProperty("JpvmClasspath", "");
+            java_exec = System.getProperty("JavaHome", "java");
             // Announce location
             log(jpvm.pvm_mytid().toString());
             my_host_name = jpvm.pvm_mytid().getHost();
@@ -377,7 +378,7 @@ public class Daemon {
 
         // Create a thread to execute the new task
         String command = java_exec +
-                " -cp /Users/mitryl/Dev/jpvm/build/libs/*" +
+                " -cp " + classpath +
                 " -Djpvm.daemon=" + jpvm.pvm_mytid().getPort() +
                 " -Djpvm.parhost=" + parent.getHost() +
                 " -Djpvm.parport=" + parent.getPort() +
